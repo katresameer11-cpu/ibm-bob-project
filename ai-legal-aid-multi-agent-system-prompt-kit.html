@@ -1,0 +1,464 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>AI Legal Aid Multi-Agent System — Prompt Kit</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    font-size: 14px;
+    line-height: 1.6;
+    color: #1f2328;
+    background: #ffffff;
+    padding: 32px 16px 48px;
+  }
+  .page { max-width: 760px; margin: 0 auto; }
+
+  /* Header */
+  .header { border-bottom: 2px solid #e5e7eb; padding-bottom: 20px; margin-bottom: 28px; }
+  .header h1 { font-size: 22px; font-weight: 700; color: #1f2328; margin-bottom: 4px; }
+  .header .subtitle { color: #57606a; font-size: 13px; }
+  .badge-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .badge {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #57606a;
+    padding: 2px 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .badge.blue { background: #eff6ff; border-color: #bfdbfe; color: #3b82d4; }
+  .badge.purple { background: #f5f3ff; border-color: #ddd6fe; color: #7c5cd8; }
+
+  /* Section titles */
+  h2 {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: #57606a;
+    margin: 28px 0 12px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  /* Agent cards */
+  .agent-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 560px) { .agent-grid { grid-template-columns: 1fr; } }
+
+  .card {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 14px 16px;
+  }
+  .card.orchestrator {
+    grid-column: 1 / -1;
+    border-left: 3px solid #3b82d4;
+    background: #eff6ff;
+  }
+  .card.rag-util {
+    border-left: 3px solid #7c5cd8;
+    background: #f5f3ff;
+  }
+  .card-title {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 4px;
+    color: #1f2328;
+  }
+  .card-role {
+    font-size: 12px;
+    color: #57606a;
+    margin-bottom: 8px;
+  }
+  .card ul { padding-left: 16px; }
+  .card li { font-size: 12.5px; color: #1f2328; margin-bottom: 3px; }
+  .card .trigger {
+    display: inline-block;
+    background: #e5e7eb;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    color: #57606a;
+    padding: 1px 6px;
+    margin-top: 6px;
+    font-style: italic;
+  }
+
+  /* Risk pills */
+  .risk { display: inline-block; border-radius: 3px; font-size: 11px; font-weight: 700; padding: 1px 7px; }
+  .risk.low { background: #d1fae5; color: #065f46; }
+  .risk.medium { background: #fef3c7; color: #92400e; }
+  .risk.high { background: #fee2e2; color: #991b1b; }
+
+  /* Pipeline / wiring */
+  .pipeline {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 18px 20px;
+    font-size: 12.5px;
+  }
+  .pipeline-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .pipeline-row:last-child { margin-bottom: 0; }
+  .pipeline-node {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 4px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+    color: #1f2328;
+  }
+  .pipeline-node.orchestrator-node { border-color: #3b82d4; color: #3b82d4; }
+  .pipeline-node.rag-node { border-color: #7c5cd8; color: #7c5cd8; }
+  .pipeline-node.specialist-node { border-color: #57606a; }
+  .pipeline-arrow { color: #57606a; font-size: 13px; padding-top: 4px; }
+  .pipeline-label { color: #57606a; font-size: 11.5px; padding-top: 5px; font-style: italic; }
+
+  /* JSON contract */
+  .json-block {
+    background: #1f2328;
+    color: #e6edf3;
+    border-radius: 6px;
+    padding: 16px 18px;
+    font-family: "Menlo", "Consolas", "Cascadia Code", monospace;
+    font-size: 11.5px;
+    line-height: 1.7;
+    overflow-x: auto;
+  }
+  .json-key { color: #79c0ff; }
+  .json-str { color: #a5d6ff; }
+  .json-muted { color: #8b949e; }
+
+  /* Rules table */
+  table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+  thead th {
+    background: #f7f8fa;
+    border: 1px solid #e5e7eb;
+    padding: 7px 10px;
+    text-align: left;
+    font-weight: 700;
+    color: #57606a;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  tbody td {
+    border: 1px solid #e5e7eb;
+    padding: 7px 10px;
+    vertical-align: top;
+    color: #1f2328;
+  }
+  tbody tr:nth-child(even) td { background: #f7f8fa; }
+
+  /* Disclaimer box */
+  .disclaimer {
+    background: #fef9c3;
+    border: 1px solid #fde68a;
+    border-left: 3px solid #f59e0b;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 12px;
+    color: #78350f;
+    margin-top: 24px;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 40px;
+    padding-top: 14px;
+    border-top: 1px solid #e5e7eb;
+    text-align: center;
+    font-size: 12px;
+    color: #57606a;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  
+  <div class="header">
+    <h1>AI Legal Aid Multi-Agent System</h1>
+    <p class="subtitle">Prompt Kit — IBM Langflow / IBM Orchestrate + IBM Granite models</p>
+    <div class="badge-row">
+      <span class="badge blue">IBM Langflow</span>
+      <span class="badge blue">IBM Orchestrate</span>
+      <span class="badge blue">IBM Granite</span>
+      <span class="badge purple">RAG Pipeline</span>
+      <span class="badge">7 Prompts</span>
+      <span class="badge">5 Agents</span>
+    </div>
+  </div>
+
+  
+  <h2>System Overview</h2>
+  <p style="font-size:13px;color:#1f2328;margin-bottom:14px">
+    A multi-agent legal aid platform where <strong>LEXA</strong> (orchestrator) routes user requests to four specialist agents.
+    All agents operate on retrieved evidence only — no fabrication of legal text or case citations is permitted.
+    Every response ends with a mandatory plain-English disclaimer.
+  </p>
+
+  
+  <h2>Agents &amp; Roles</h2>
+  <div class="agent-grid">
+
+    <div class="card orchestrator">
+      <div class="card-title">LEXA — Master Orchestrator</div>
+      <div class="card-role">Routes requests · merges outputs · enforces output format</div>
+      <ul>
+        <li>Identifies intent and selects 1–4 specialist agents</li>
+        <li>Calls multiple agents in sequence when request spans categories</li>
+        <li>Emits structured JSON dashboard contract (see below)</li>
+        <li>Appends mandatory legal disclaimer verbatim to every response</li>
+        <li>Uses plain English only — defines any legal term used inline</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Contract Reviewer Agent</div>
+      <div class="card-role">Analyses uploaded/pasted contracts, leases, NDAs, offer letters</div>
+      <ul>
+        <li>Identifies document type and extracts per-party obligations</li>
+        <li>Flags risky clauses: auto-renewal, broad indemnification, non-compete, arbitration waivers, liability caps, hidden fees</li>
+        <li>Notes ambiguous / contradictory clauses</li>
+        <li>Explicitly calls out <em>missing</em> standard protections as gaps</li>
+        <li>Outputs structured JSON + human-readable summary</li>
+      </ul>
+      <span class="trigger">Trigger: document uploaded/pasted for review</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Compliance Checker Agent</div>
+      <div class="card-role">Checks a described practice or policy against retrieved regulation text</div>
+      <ul>
+        <li>Works only from RAG-retrieved regulatory context — never guesses at law</li>
+        <li>Classifies each requirement: Compliant / Non-compliant / Insufficient info</li>
+        <li>Provides concrete remediation steps for each gap</li>
+        <li>Cites retrieved clause for every judgment, e.g. [Source: Clause 4.2]</li>
+      </ul>
+      <span class="trigger">Trigger: "is my practice/policy compliant with X?"</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Q&amp;A RAG Agent</div>
+      <div class="card-role">Answers general legal questions from the retrieved knowledge base</div>
+      <ul>
+        <li>Answers strictly from retrieved context chunks — states clearly when answer not found</li>
+        <li>Tags every factual claim with a source citation, e.g. [Source 2]</li>
+        <li>Presents conflicting sources openly rather than silently resolving them</li>
+        <li>Prompts for jurisdiction if topic is jurisdiction-sensitive</li>
+        <li>Also serves as retrieval backbone for Compliance Checker &amp; Case Research agents</li>
+      </ul>
+      <span class="trigger">Trigger: "what is / what are my rights / how does X law work"</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Case Research Agent</div>
+      <div class="card-role">Retrieves and summarises relevant past judgments and precedents</div>
+      <ul>
+        <li>Identifies legal issue(s) from user's fact pattern</li>
+        <li>Never fabricates case names, citations, or outcomes</li>
+        <li>Returns max 3–5 cases ranked by relevance, each with facts, ruling, and why it's relevant</li>
+        <li>Notes that precedent value depends on jurisdiction and court level</li>
+      </ul>
+      <span class="trigger">Trigger: past rulings, similar disputes, precedent for a claim</span>
+    </div>
+
+  </div>
+
+  
+  <h2>Supporting Utility Prompts</h2>
+  <div class="agent-grid">
+    <div class="card rag-util">
+      <div class="card-title">RAG Query Generator</div>
+      <div class="card-role">Runs before any agent that needs the vector store</div>
+      <ul>
+        <li>Converts user question into 2–4 targeted search queries (5–12 words each)</li>
+        <li>Pairs legal terminology with plain-language phrasing to maximise chunk recall</li>
+        <li>Appends jurisdiction terms when specified</li>
+        <li>Returns only the query list — no prose</li>
+      </ul>
+    </div>
+    <div class="card rag-util">
+      <div class="card-title">Document Parser</div>
+      <div class="card-role">Pre-processes raw OCR/PDF/DOCX text before Contract Reviewer</div>
+      <ul>
+        <li>Structures raw text into: Title, Parties, Definitions, Clauses (numbered, refs preserved), Signatures/Dates</li>
+        <li>Fixes OCR artifacts (broken words, stray line breaks)</li>
+        <li>Does NOT alter, summarize, or omit any substantive wording</li>
+        <li>Output is passed directly to Contract Reviewer — must remain faithful</li>
+      </ul>
+    </div>
+  </div>
+
+  
+  <h2>Orchestrator Routing Rules</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>User Signal</th>
+        <th>Agent(s) Called</th>
+        <th>Pipeline Path</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Document uploaded/pasted + wants review</td>
+        <td>Document Parser → Contract Reviewer</td>
+        <td>No RAG needed</td>
+      </tr>
+      <tr>
+        <td>"Is X legal / does Y comply with Z regulation?"</td>
+        <td>RAG Query Gen → Vector Store → Compliance Checker</td>
+        <td>RAG retrieval required</td>
+      </tr>
+      <tr>
+        <td>"What is / what are my rights / how does X law work"</td>
+        <td>RAG Query Gen → Vector Store → Q&amp;A RAG Agent</td>
+        <td>RAG retrieval required</td>
+      </tr>
+      <tr>
+        <td>"Has this happened before / find precedent"</td>
+        <td>RAG Query Gen → Case Law Store → Case Research Agent</td>
+        <td>Case law corpus required</td>
+      </tr>
+      <tr>
+        <td>Spans multiple categories</td>
+        <td>Multiple agents in sequence</td>
+        <td>Orchestrator merges all outputs</td>
+      </tr>
+    </tbody>
+  </table>
+
+  
+  <h2>Langflow Wiring (Node Flow)</h2>
+  <div class="pipeline">
+
+    <div class="pipeline-row">
+      <div class="pipeline-node orchestrator-node">User Input</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-node orchestrator-node">Orchestrator (LEXA)</div>
+    </div>
+
+    <div style="padding-left:20px;border-left:2px solid #e5e7eb;margin-left:60px;margin-bottom:8px">
+
+      <div class="pipeline-row">
+        <div class="pipeline-label">if doc uploaded →</div>
+        <div class="pipeline-node specialist-node">Document Parser</div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-node specialist-node">Contract Reviewer Agent</div>
+      </div>
+
+      <div class="pipeline-row">
+        <div class="pipeline-label">compliance Q →</div>
+        <div class="pipeline-node rag-node">RAG Query Gen</div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-node rag-node">Vector Store</div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-node specialist-node">Compliance Checker Agent</div>
+      </div>
+
+      <div class="pipeline-row">
+        <div class="pipeline-label">general Q →</div>
+        <div class="pipeline-node rag-node">RAG Query Gen</div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-node rag-node">Vector Store</div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-node specialist-node">Q&amp;A RAG Agent</div>
+      </div>
+
+      <div class="pipeline-row">
+        <div class="pipeline-label">precedent Q →</div>
+        <div class="pipeline-node rag-node">RAG Query Gen</div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-node rag-node">Case Law Vector Store</div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-node specialist-node">Case Research Agent</div>
+      </div>
+
+    </div>
+
+    <div class="pipeline-row" style="margin-top:6px">
+      <div class="pipeline-arrow" style="padding-left:60px">All agent outputs →</div>
+      <div class="pipeline-node orchestrator-node">Orchestrator merges + formats</div>
+      <div class="pipeline-arrow">→</div>
+      <div class="pipeline-node orchestrator-node">Dashboard / Frontend</div>
+    </div>
+
+  </div>
+
+  
+  <h2>Orchestrator Output Format (Every Response)</h2>
+  <table>
+    <thead><tr><th>#</th><th>Section</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Plain-language summary</td><td>2–4 sentences, no unexplained jargon</td></tr>
+      <tr><td>2</td><td>Key points (bullet list)</td><td>Tagged by source agent</td></tr>
+      <tr><td>3</td><td>Risk level</td><td><span class="risk low">Low</span> <span class="risk medium">Medium</span> <span class="risk high">High</span> — with one-line reason; omitted if not applicable</td></tr>
+      <tr><td>4</td><td>Suggested next step</td><td>Actionable, plain English</td></tr>
+      <tr><td>5</td><td>Disclaimer</td><td>Appended verbatim at END — never at the start</td></tr>
+    </tbody>
+  </table>
+
+  
+  <h2>Dashboard JSON Output Contract</h2>
+  <div class="json-block">
+<span class="json-muted">{</span><br />
+  <span class="json-key">"summary"</span>: <span class="json-str">"string — plain-language 2–4 sentence answer"</span>,<br />
+  <span class="json-key">"agents_used"</span>: [<span class="json-str">"ContractReviewer"</span>, <span class="json-str">"ComplianceChecker"</span>],<br />
+  <span class="json-key">"risk_level"</span>: <span class="json-str">"Low | Medium | High"</span>,<br />
+  <span class="json-key">"highlights"</span>: [<br />
+    <span class="json-muted">{</span><br />
+      <span class="json-key">"type"</span>: <span class="json-str">"clause | regulation | case"</span>,<br />
+      <span class="json-key">"title"</span>: <span class="json-str">"string"</span>,<br />
+      <span class="json-key">"detail"</span>: <span class="json-str">"string"</span>,<br />
+      <span class="json-key">"risk"</span>: <span class="json-str">"Low | Medium | High"</span><br />
+    <span class="json-muted">}</span><br />
+  ],<br />
+  <span class="json-key">"next_steps"</span>: [<span class="json-str">"string"</span>, <span class="json-str">"string"</span>],<br />
+  <span class="json-key">"disclaimer"</span>: <span class="json-str">"This is general legal information generated by an AI system..."</span><br />
+<span class="json-muted">}</span>
+  </div>
+
+  
+  <h2>Cross-Agent Safety Constraints</h2>
+  <table>
+    <thead><tr><th>Constraint</th><th>Applies To</th></tr></thead>
+    <tbody>
+      <tr><td>Never fabricate legal text, case names, or citations</td><td>All agents</td></tr>
+      <tr><td>Never state a definitive legal outcome ("you will win/lose")</td><td>Orchestrator, all agents</td></tr>
+      <tr><td>Never state enforceability — depends on jurisdiction + facts</td><td>Contract Reviewer</td></tr>
+      <tr><td>Stop and say so if no relevant regulation retrieved; do not guess</td><td>Compliance Checker</td></tr>
+      <tr><td>Present conflicting sources openly; do not silently pick one</td><td>Q&amp;A RAG Agent</td></tr>
+      <tr><td>Always note precedent value depends on jurisdiction &amp; court level</td><td>Case Research Agent</td></tr>
+      <tr><td>Do not alter substantive wording of source documents</td><td>Document Parser</td></tr>
+      <tr><td>Prompt for jurisdiction when topic is jurisdiction-sensitive</td><td>Q&amp;A RAG Agent</td></tr>
+    </tbody>
+  </table>
+
+  
+  <div class="disclaimer">
+    <strong>Mandatory System Disclaimer (appended verbatim to every response):</strong><br />
+    "This is general legal information generated by an AI system, not legal advice from a licensed attorney. For decisions with real financial, contractual, or legal consequences, please consult a qualified lawyer in your jurisdiction."
+  </div>
+
+  
+  <div class="footer">Made with IBM Bob</div>
+
+</div>
+</body>
+</html>
